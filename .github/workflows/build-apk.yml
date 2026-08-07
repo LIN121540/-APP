@@ -1,0 +1,52 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 安装 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: 安装 Java JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: 安装 Capacitor
+        run: npm install @capacitor/core @capacitor/cli @capacitor/android
+
+      - name: 添加 Android 平台
+        run: npx cap add android
+
+      - name: 整理网页文件到 www 目录
+        run: |
+          mkdir -p www
+          [ -f phone.html ] && mv phone.html www/index.html
+          [ -f index.html ] && [ ! -f www/index.html ] && mv index.html www/index.html
+          echo "www 目录内容："
+          ls www
+
+      - name: 同步网页资源到原生工程
+        run: npx cap copy
+
+      - name: 编译 Debug APK
+        run: cd android && ./gradlew assembleDebug
+
+      - name: 上传 APK 产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: RAINxDS-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+
