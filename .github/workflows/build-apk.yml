@@ -31,25 +31,24 @@ jobs:
           rm -f www/index.html
           if [ -f index.html ]; then
             cp index.html www/index.html
-            echo "已使用 index.html -> www/index.html"
+            echo "已使用 index.html"
           elif [ -f phone.html ]; then
             cp phone.html www/index.html
-            echo "已使用 phone.html -> www/index.html"
+            echo "已使用 phone.html"
           else
             HTML_FILE=$(find . -maxdepth 2 -name "*.html" -not -path "./www/*" -not -path "./.git/*" | head -1)
             if [ -n "$HTML_FILE" ]; then
               cp "$HTML_FILE" www/index.html
-              echo "已使用 $HTML_FILE -> www/index.html"
+              echo "已使用 $HTML_FILE"
             fi
           fi
-          echo "=== www 目录最终内容 ==="
+          echo "=== www 目录内容 ==="
           ls -la www
           if [ ! -f www/index.html ]; then
-            echo "错误：www/index.html 不存在！仓库里的文件列表："
+            echo "错误：www/index.html 不存在！"
             find . -not -path "./.git/*" -type f
             exit 1
           fi
-          echo "www/index.html 已就位"
 
       - name: 安装 Capacitor
         run: npm install @capacitor/core @capacitor/cli @capacitor/android
@@ -57,7 +56,7 @@ jobs:
       - name: 添加 Android 平台
         run: npx cap add android
 
-      - name: 同步 Capacitor（生成原生工程配置）
+      - name: 同步 Capacitor
         run: npx cap sync android
 
       - name: 编译 Debug APK
