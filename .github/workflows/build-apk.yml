@@ -25,11 +25,32 @@ jobs:
 
       - name: 整理网页文件到 www 目录
         run: |
+          echo "=== 仓库根目录所有文件 ==="
+          ls -la
           mkdir -p www
-          [ -f phone.html ] && mv phone.html www/index.html
-          [ -f index.html ] && [ ! -f www/index.html ] && mv index.html www/index.html
-          echo "www 目录内容："
-          ls www
+          if [ -f www/index.html ]; then
+            echo "已有 www/index.html，跳过"
+          elif [ -f phone.html ]; then
+            mv phone.html www/index.html
+            echo "已移动 phone.html -> www/index.html"
+          elif [ -f index.html ]; then
+            mv index.html www/index.html
+            echo "已移动 index.html -> www/index.html"
+          else
+            HTML_FILE=$(find . -maxdepth 2 -name "*.html" -not -path "./www/*" -not -path "./.git/*" | head -1)
+            if [ -n "$HTML_FILE" ]; then
+              mv "$HTML_FILE" www/index.html
+              echo "已移动 $HTML_FILE -> www/index.html"
+            fi
+          fi
+          echo "=== www 目录最终内容 ==="
+          ls -la www
+          if [ ! -f www/index.html ]; then
+            echo "错误：www/index.html 不存在！仓库里的文件列表："
+            find . -not -path "./.git/*" -type f
+            exit 1
+          fi
+          echo "www/index.html 已就位"
 
       - name: 安装 Capacitor
         run: npm install @capacitor/core @capacitor/cli @capacitor/android
