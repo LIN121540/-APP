@@ -28,19 +28,18 @@ jobs:
           echo "=== 仓库根目录所有文件 ==="
           ls -la
           mkdir -p www
-          if [ -f www/index.html ]; then
-            echo "已有 www/index.html，跳过"
+          rm -f www/index.html
+          if [ -f index.html ]; then
+            cp index.html www/index.html
+            echo "已使用 index.html -> www/index.html"
           elif [ -f phone.html ]; then
-            mv phone.html www/index.html
-            echo "已移动 phone.html -> www/index.html"
-          elif [ -f index.html ]; then
-            mv index.html www/index.html
-            echo "已移动 index.html -> www/index.html"
+            cp phone.html www/index.html
+            echo "已使用 phone.html -> www/index.html"
           else
             HTML_FILE=$(find . -maxdepth 2 -name "*.html" -not -path "./www/*" -not -path "./.git/*" | head -1)
             if [ -n "$HTML_FILE" ]; then
-              mv "$HTML_FILE" www/index.html
-              echo "已移动 $HTML_FILE -> www/index.html"
+              cp "$HTML_FILE" www/index.html
+              echo "已使用 $HTML_FILE -> www/index.html"
             fi
           fi
           echo "=== www 目录最终内容 ==="
