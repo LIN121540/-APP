@@ -9,13 +9,57 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: 检出代码
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: 安装 Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
 
-      - name: 安装 Java JDK（Android 构建依赖）
-        uses: 
+      - name: Setup Java JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Prepare www directory
+        run: |
+          mkdir -p www
+          rm -f www/index.html
+          if [ -f index.html ]; then
+            cp index.html www/index.html
+          elif [ -f phone.html ]; then
+            cp phone.html www/index.html
+          else
+            HTML_FILE=$(find . -maxdepth 2 -name "*.html" -not -path "./www/*" -not -path "./.git/*" | head -1)
+            if [ -n "$HTML_FILE" ]; then
+              cp "$HTML_FILE" www/index.html
+            fi
+          fi
+          if [ ! -f www/index.html ]; then
+            echo "ERROR: www/index.html not found"
+            exit 1
+          fi
+
+      - name: Install Capacitor
+        run: npm install @capacitor/core @capacitor/cli @capacitor/android
+
+      - name: Add Android platform
+        run: npx cap add android
+
+      - name: Add microphone permission
+        run: sed -i 's/<\/manifest>/    <uses-permission android:name="android.permission.RECORD_AUDIO" \/>\n    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" \/>\n<\/manifest>/' android/app/src/main/AndroidManifest.xml
+
+      - name: Sync Capacitor
+        run: npx cap sync android
+
+      - name: Build Debug APK
+        run: cd android && ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: RAINxDS-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
